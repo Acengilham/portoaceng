@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buku Tamu Undangan Digital</title>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            background: #2575fc;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #6a11cb;
+        }
+
+        .guest-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+            padding-right: 10px;
+        }
+
+        .guest-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .guest-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .guest-list::-webkit-scrollbar-thumb {
+            background: #2575fc;
+            border-radius: 10px;
+        }
+
+        .guest-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guest-list li {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .guest-list li:hover {
+            transform: translateY(-5px);
+        }
+
+        .guest-list li div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guest-list li strong {
+            font-size: 1.1rem;
+        }
+
+        .guest-list li span {
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        .guest-list li button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .guest-list li button.edit-btn:hover {
+            color: #4cd137;
+        }
+
+        .guest-list li button.delete-btn:hover {
+            color: #ff4757;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        footer a {
+            color: #77aaff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #4cd137;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buku Tamu Undangan</h1>
+        <input type="text" id="guestName" placeholder="Masukkan Nama Tamu">
+        <button onclick="addGuest()">Tambah Tamu</button>
+        <button onclick="downloadData()">Download Data</button>
+        <div class="guest-list">
+            <ul id="guestList"></ul>
+        </div>
+        <footer>
+            By Nyebar.ID | <a onclick="showSupport()">Support Kami</a>
+        </footer>
+    </div>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let guests = [];
+
+        // Fungsi untuk menambahkan tamu
+        function addGuest() {
+            const guestName = document.getElementById('guestName').value.trim();
+            if (guestName === "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Nama tamu tidak boleh kosong!',
+                });
+                return;
+            }
+
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            const date = now.toLocaleDateString();
+
+            const guest = {
+                name: guestName,
+                date: date,
+                time: time
+            };
+
+            // Tambahkan tamu baru di bagian atas array
+            guests.unshift(guest);
+            document.getElementById('guestName').value = "";
+            renderGuestList();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Tamu berhasil ditambahkan.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        // Fungsi untuk menampilkan daftar tamu
+        function renderGuestList() {
+            const guestList = document.getElementById('guestList');
+            guestList.innerHTML = "";
+
+            guests.forEach((guest, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div>
+                        <strong>${guest.name}</strong>
+                        <span>${guest.date} - ${guest.time}</span>
+                    </div>
+                    <div>
+                        <button class="edit-btn" onclick="editGuest(${index})">✏️</button>
+                        <button class="delete-btn" onclick="deleteGuest(${index})">🗑️</button>
+                    </div>
+                `;
+                guestList.appendChild(li);
+            });
+        }
+
+        // Fungsi untuk mengedit tamu
+        function editGuest(index) {
+            Swal.fire({
+                title: 'Edit Nama Tamu',
+                input: 'text',
+                inputValue: guests[index].name,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Nama tamu tidak boleh kosong!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    guests[index].name = result.value.trim();
+                    renderGuestList();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Nama tamu berhasil diubah.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // Fungsi untuk menghapus tamu
+        function deleteGuest(index) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Anda tidak dapat mengembalikan data ini!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff4757',
+                cancelButtonColor: '#2575fc',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    guests.splice(index, 1);
+                    renderGuestList();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Tamu berhasil dihapus.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // Fungsi untuk download data tamu
+        function downloadData() {
+            if (guests.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Tidak ada data tamu untuk diunduh!',
+                });
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Nama,Tanggal,Waktu\n";
+            guests.forEach(guest => {
+                csvContent += `${guest.name},${guest.date},${guest.time}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data_tamu.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Fungsi untuk menampilkan popup support
+        function showSupport() {
+            Swal.fire({
+                title: 'Support Kami',
+                html: `<img src="https://lh5.googleusercontent.com/r3H_PsIArOB_bOmXHxlD2phG0fd6LKLGfva1c55WIsMf8gPeJy0lJSN-ccl3dFHVoKEPyN2lhdUJ214sSYSlHnFMKSvn4kqbweWuIZOwhOJ4G28kUINoHcVj8ORPRJ9gt4Iisisey-c=w740" alt="Support" style="width: 100%; border-radius: 10px;">`,
+                showCloseButton: true,
+                showConfirmButton: false,
+            });
+        }
+    </script>
+</body>
+</html>
